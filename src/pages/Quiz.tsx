@@ -163,6 +163,7 @@ export default function Quiz() {
               <h3 className="text-lg font-medium">{currentQuiz.question}</h3>
               
               <RadioGroup
+                key={currentQuizIndex}
                 value={selectedAnswer}
                 onValueChange={setSelectedAnswer}
                 disabled={showResult}
