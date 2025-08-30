@@ -101,7 +101,7 @@ export default function Module() {
                 <iframe
                   width="100%"
                   height="100%"
-                  src="https://www.youtube.com/embed/JMUxmLyrhSk"
+                  src="https://www.youtube.com/embed/CmAcro8YblU"
                   title="O que é Inteligência Artificial?"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
