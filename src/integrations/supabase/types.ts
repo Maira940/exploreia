@@ -14,11 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      certificates: {
+        Row: {
+          certificate_data: Json
+          created_at: string
+          id: string
+          issued_at: string
+          user_id: string
+        }
+        Insert: {
+          certificate_data: Json
+          created_at?: string
+          id?: string
+          issued_at?: string
+          user_id: string
+        }
+        Update: {
+          certificate_data?: Json
+          created_at?: string
+          id?: string
+          issued_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           full_name: string | null
           id: string
+          phone: string | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string
@@ -27,6 +52,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id: string
@@ -35,6 +61,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
