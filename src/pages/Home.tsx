@@ -22,21 +22,29 @@ export default function Home() {
                 </span>
               )}
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/progresso">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Progresso
-              </Link>
-            </Button>
-            {profile?.role === 'admin' && (
+            <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" asChild>
-                <Link to="/admin">Administração</Link>
+                <Link to="/perfil">
+                  <User className="h-4 w-4 mr-2" />
+                  Perfil
+                </Link>
               </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/progresso">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Progresso
+                </Link>
+              </Button>
+              {profile?.role === 'admin' && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin">Administração</Link>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </header>

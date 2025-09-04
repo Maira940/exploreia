@@ -7,6 +7,7 @@ interface Profile {
   id: string;
   user_id: string;
   full_name: string | null;
+  phone?: string | null;
   role: 'student' | 'admin';
 }
 

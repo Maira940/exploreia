@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Module from "./pages/Module";
 import Quiz from "./pages/Quiz";
 import Progress from "./pages/Progress";
+import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -65,6 +66,11 @@ function AppRoutes() {
       <Route path="/progresso" element={
         <ProtectedRoute>
           <Progress />
+        </ProtectedRoute>
+      } />
+      <Route path="/perfil" element={
+        <ProtectedRoute>
+          <Profile />
         </ProtectedRoute>
       } />
       <Route path="/admin" element={
