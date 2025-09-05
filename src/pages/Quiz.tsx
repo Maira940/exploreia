@@ -78,13 +78,16 @@ export default function Quiz() {
       try {
         await supabase
           .from('progress')
-          .upsert({
-            user_id: user.id,
-            module_name: moduleId,
-            score: newScore,
-            is_completed: currentQuizIndex === quizzes.length - 1,
-            completed_at: currentQuizIndex === quizzes.length - 1 ? new Date().toISOString() : null,
-          });
+          .upsert(
+            {
+              user_id: user.id,
+              module_name: moduleId,
+              score: newScore,
+              is_completed: currentQuizIndex === quizzes.length - 1,
+              completed_at: currentQuizIndex === quizzes.length - 1 ? new Date().toISOString() : null,
+            },
+            { onConflict: 'user_id,module_name' }
+          );
       } catch (error: any) {
         console.error('Error updating progress:', error);
       }
