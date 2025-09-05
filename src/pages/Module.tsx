@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Play, Brain, Database, Network, Scale, CheckCircle } from 'lucide-react';
 
@@ -8,6 +11,8 @@ import { ArrowLeft, Play, Brain, Database, Network, Scale, CheckCircle } from 'l
 function InteractiveExercise() {
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const { user } = useAuth();
 
   const scenarios = [
     {
@@ -25,8 +30,37 @@ function InteractiveExercise() {
 
   const scenario = scenarios[0];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setShowResult(true);
+    
+    if (selectedAnswer === scenario.correct) {
+      const newScore = score + 10;
+      setScore(newScore);
+      
+      // Salvar progresso no banco de dados
+      if (user?.id) {
+        try {
+          const { error } = await supabase
+            .from('progress')
+            .upsert({
+              user_id: user.id,
+              module_name: 'fundamentos-ml',
+              completed: true,
+              score: newScore
+            }, {
+              onConflict: 'user_id,module_name'
+            });
+            
+          if (!error) {
+            toast.success('Resposta correta! +10 pontos');
+          }
+        } catch (error) {
+          console.error('Erro ao salvar progresso:', error);
+        }
+      }
+    } else {
+      toast.error('Resposta incorreta. Tente novamente!');
+    }
   };
 
   const resetExercise = () => {
@@ -74,13 +108,30 @@ function InteractiveExercise() {
         </div>
 
         {showResult && (
-          <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 rounded-lg">
-            <p className="font-medium text-green-800 dark:text-green-200 mb-2">
-              {selectedAnswer === scenario.correct ? '✅ Correto!' : '❌ Incorreto'}
+          <div className={`p-4 border rounded-lg ${
+            selectedAnswer === scenario.correct 
+              ? 'bg-green-50 dark:bg-green-950 border-green-200' 
+              : 'bg-red-50 dark:bg-red-950 border-red-200'
+          }`}>
+            <p className={`font-medium mb-2 ${
+              selectedAnswer === scenario.correct 
+                ? 'text-green-800 dark:text-green-200' 
+                : 'text-red-800 dark:text-red-200'
+            }`}>
+              {selectedAnswer === scenario.correct ? '✅ Correto! +10 pontos' : '❌ Incorreto'}
             </p>
-            <p className="text-sm text-green-700 dark:text-green-300">
+            <p className={`text-sm ${
+              selectedAnswer === scenario.correct 
+                ? 'text-green-700 dark:text-green-300' 
+                : 'text-red-700 dark:text-red-300'
+            }`}>
               <strong>Explicação:</strong> {scenario.explanation}
             </p>
+            {score > 0 && (
+              <p className="text-sm font-semibold mt-2">
+                Pontuação Total: {score} pontos
+              </p>
+            )}
           </div>
         )}
 
@@ -582,27 +633,32 @@ export default function Module() {
       case 'introducao':
         return {
           title: 'Módulo 1: Introdução à IA',
-          content: <IntroducaoContent />
+          content: <IntroducaoContent />,
+          hasQuiz: true
         };
       case 'fundamentos-ml':
         return {
           title: 'Módulo 2: Fundamentos do Aprendizado de Máquina',
-          content: <FundamentosMLContent />
+          content: <FundamentosMLContent />,
+          hasQuiz: false
         };
       case 'dados-algoritmos':
         return {
           title: 'Módulo 3: Representação de Dados e Algoritmos',
-          content: <DadosAlgoritmosContent />
+          content: <DadosAlgoritmosContent />,
+          hasQuiz: true
         };
       case 'redes-neurais':
         return {
           title: 'Módulo 4: Redes Neurais Artificiais',
-          content: <RedesNeuraisContent />
+          content: <RedesNeuraisContent />,
+          hasQuiz: true
         };
       case 'ia-etica':
         return {
           title: 'Módulo 5: IA e Ética',
-          content: <IAEticaContent />
+          content: <IAEticaContent />,
+          hasQuiz: true
         };
       default:
         return null;
@@ -639,13 +695,15 @@ export default function Module() {
         <div className="max-w-4xl mx-auto space-y-8">
           {moduleContent.content}
           
-          <div className="text-center pt-8 border-t">
-            <Button asChild size="lg">
-              <Link to={`/quiz/${moduleId}`}>
-                Fazer Quiz do Módulo
-              </Link>
-            </Button>
-          </div>
+          {moduleContent.hasQuiz && (
+            <div className="text-center pt-8 border-t">
+              <Button asChild size="lg">
+                <Link to={`/quiz/${moduleId}`}>
+                  Fazer Quiz do Módulo
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </main>
     </div>
