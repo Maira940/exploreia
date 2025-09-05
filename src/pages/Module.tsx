@@ -1,7 +1,108 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Play, Brain, Database, Network, Scale } from 'lucide-react';
+import { ArrowLeft, Play, Brain, Database, Network, Scale, CheckCircle } from 'lucide-react';
+
+// Componente de exercício interativo
+function InteractiveExercise() {
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [showResult, setShowResult] = useState(false);
+
+  const scenarios = [
+    {
+      id: 'netflix',
+      text: 'Um sistema de recomendação do Netflix analisa milhares de filmes que você já assistiu e avaliou para sugerir novos filmes.',
+      options: [
+        { id: 'supervisionado', text: 'Aprendizado Supervisionado' },
+        { id: 'nao-supervisionado', text: 'Aprendizado Não Supervisionado' },
+        { id: 'reforco', text: 'Aprendizado por Reforço' }
+      ],
+      correct: 'supervisionado',
+      explanation: 'O sistema usa dados rotulados (filmes + suas avaliações) para prever suas preferências futuras.'
+    }
+  ];
+
+  const scenario = scenarios[0];
+
+  const handleSubmit = () => {
+    setShowResult(true);
+  };
+
+  const resetExercise = () => {
+    setSelectedAnswer('');
+    setShowResult(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Exercício Interativo</CardTitle>
+        <CardDescription>
+          Analise o cenário e identifique o tipo de aprendizado
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="p-4 bg-muted rounded-lg">
+          <p className="font-medium mb-2">Cenário:</p>
+          <p className="text-sm">{scenario.text}</p>
+        </div>
+
+        <div className="space-y-3">
+          <p className="font-medium">Qual tipo de aprendizado está sendo utilizado?</p>
+          {scenario.options.map((option) => (
+            <div
+              key={option.id}
+              className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                selectedAnswer === option.id
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-primary/50'
+              } ${showResult ? 'cursor-not-allowed' : ''}`}
+              onClick={() => !showResult && setSelectedAnswer(option.id)}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm">{option.text}</span>
+                {showResult && option.id === scenario.correct && (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                )}
+                {showResult && selectedAnswer === option.id && option.id !== scenario.correct && (
+                  <span className="text-red-500">✗</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {showResult && (
+          <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 rounded-lg">
+            <p className="font-medium text-green-800 dark:text-green-200 mb-2">
+              {selectedAnswer === scenario.correct ? '✅ Correto!' : '❌ Incorreto'}
+            </p>
+            <p className="text-sm text-green-700 dark:text-green-300">
+              <strong>Explicação:</strong> {scenario.explanation}
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          {!showResult ? (
+            <Button 
+              onClick={handleSubmit} 
+              disabled={!selectedAnswer}
+              className="flex-1"
+            >
+              Verificar Resposta
+            </Button>
+          ) : (
+            <Button onClick={resetExercise} variant="outline" className="flex-1">
+              Tentar Novamente
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 // Componentes de conteúdo para cada módulo
 function IntroducaoContent() {
@@ -145,26 +246,31 @@ function FundamentosMLContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Exercício Situacional</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="h-5 w-5" />
+            Vídeo Explicativo
+          </CardTitle>
           <CardDescription>
-            Analise o cenário e identifique o tipo de aprendizado
+            Assista ao vídeo para aprofundar seus conhecimentos sobre Machine Learning
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="font-medium">Cenário:</p>
-            <p className="text-sm mt-2">
-              Um sistema de recomendação do Netflix analisa milhares de filmes que você já assistiu 
-              e avaliou para sugerir novos filmes que você provavelmente gostará.
-            </p>
-            <p className="text-sm mt-4 font-medium">Qual tipo de aprendizado está sendo utilizado?</p>
-            <p className="text-sm mt-2 text-muted-foreground">
-              Resposta: Aprendizado Supervisionado - o sistema usa dados rotulados (filmes + suas avaliações) 
-              para prever suas preferências futuras.
-            </p>
+          <div className="aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/KxkP6Zv_7y0"
+              title="Fundamentos do Machine Learning"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="rounded-lg"
+            ></iframe>
           </div>
         </CardContent>
       </Card>
+
+      <InteractiveExercise />
     </>
   );
 }
@@ -533,7 +639,7 @@ export default function Module() {
         <div className="max-w-4xl mx-auto space-y-8">
           {moduleContent.content}
           
-          <div className="text-center">
+          <div className="text-center pt-8 border-t">
             <Button asChild size="lg">
               <Link to={`/quiz/${moduleId}`}>
                 Fazer Quiz do Módulo
