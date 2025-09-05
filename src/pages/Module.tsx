@@ -12,6 +12,7 @@ function InteractiveExercise() {
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const { user } = useAuth();
 
   const scenarios = [
@@ -25,10 +26,54 @@ function InteractiveExercise() {
       ],
       correct: 'supervisionado',
       explanation: 'O sistema usa dados rotulados (filmes + suas avaliações) para prever suas preferências futuras.'
+    },
+    {
+      id: 'cluster',
+      text: 'Uma empresa precisa segmentar seus clientes em grupos baseados nos seus padrões de compra, mas não tem categorias pré-definidas.',
+      options: [
+        { id: 'supervisionado', text: 'Aprendizado Supervisionado' },
+        { id: 'nao-supervisionado', text: 'Aprendizado Não Supervisionado' },
+        { id: 'reforco', text: 'Aprendizado por Reforço' }
+      ],
+      correct: 'nao-supervisionado',
+      explanation: 'Como não há categorias pré-definidas, o algoritmo precisa encontrar padrões ocultos nos dados de compra (clustering).'
+    },
+    {
+      id: 'jogo',
+      text: 'Um algoritmo aprende a jogar xadrez jogando milhões de partidas contra si mesmo, recebendo pontos por vitórias e perdendo pontos por derrotas.',
+      options: [
+        { id: 'supervisionado', text: 'Aprendizado Supervisionado' },
+        { id: 'nao-supervisionado', text: 'Aprendizado Não Supervisionado' },
+        { id: 'reforco', text: 'Aprendizado por Reforço' }
+      ],
+      correct: 'reforco',
+      explanation: 'O algoritmo aprende através de tentativa e erro, recebendo recompensas (vitórias) e punições (derrotas).'
+    },
+    {
+      id: 'diagnostico',
+      text: 'Um sistema médico analisa milhares de imagens de raios-X já diagnosticadas por médicos para identificar pneumonia em novas imagens.',
+      options: [
+        { id: 'supervisionado', text: 'Aprendizado Supervisionado' },
+        { id: 'nao-supervisionado', text: 'Aprendizado Não Supervisionado' },
+        { id: 'reforco', text: 'Aprendizado por Reforço' }
+      ],
+      correct: 'supervisionado',
+      explanation: 'O sistema usa imagens com diagnósticos conhecidos (dados rotulados) para aprender a classificar novas imagens.'
+    },
+    {
+      id: 'deteccao-fraude',
+      text: 'Um banco analisa padrões de transações suspeitas sem saber quais são fraudulentas, buscando identificar comportamentos anômalos.',
+      options: [
+        { id: 'supervisionado', text: 'Aprendizado Supervisionado' },
+        { id: 'nao-supervisionado', text: 'Aprendizado Não Supervisionado' },
+        { id: 'reforco', text: 'Aprendizado por Reforço' }
+      ],
+      correct: 'nao-supervisionado',
+      explanation: 'Detecta anomalias nos dados sem ter exemplos prévios rotulados de fraudes, buscando padrões incomuns.'
     }
   ];
 
-  const scenario = scenarios[0];
+  const scenario = scenarios[currentQuestion];
 
   const handleSubmit = async () => {
     setShowResult(true);
@@ -63,19 +108,29 @@ function InteractiveExercise() {
     }
   };
 
+  const nextQuestion = () => {
+    if (currentQuestion < scenarios.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer('');
+      setShowResult(false);
+    }
+  };
+
   const resetExercise = () => {
+    setCurrentQuestion(0);
     setSelectedAnswer('');
     setShowResult(false);
+    setScore(0);
   };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Exercício Interativo</CardTitle>
-        <CardDescription>
-          Analise o cenário e identifique o tipo de aprendizado
-        </CardDescription>
-      </CardHeader>
+        <CardHeader>
+          <CardTitle>Exercício Interativo</CardTitle>
+          <CardDescription>
+            Pergunta {currentQuestion + 1} de {scenarios.length} - Analise o cenário e identifique o tipo de aprendizado
+          </CardDescription>
+        </CardHeader>
       <CardContent className="space-y-6">
         <div className="p-4 bg-muted rounded-lg">
           <p className="font-medium mb-2">Cenário:</p>
@@ -145,9 +200,17 @@ function InteractiveExercise() {
               Verificar Resposta
             </Button>
           ) : (
-            <Button onClick={resetExercise} variant="outline" className="flex-1">
-              Tentar Novamente
-            </Button>
+            <div className="flex gap-2 w-full">
+              {currentQuestion < scenarios.length - 1 ? (
+                <Button onClick={nextQuestion} className="flex-1">
+                  Próxima Pergunta
+                </Button>
+              ) : (
+                <Button onClick={resetExercise} variant="outline" className="flex-1">
+                  Reiniciar Exercício
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </CardContent>
