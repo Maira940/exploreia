@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -696,6 +697,229 @@ function DadosAlgoritmosContent() {
   );
 }
 
+// Componente para exercício interativo do módulo 4
+function RedesNeuraisExercise() {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [score, setScore] = useState(0);
+  const [completed, setCompleted] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [essayAnswer, setEssayAnswer] = useState('');
+  const { user } = useAuth();
+
+  const questions = [
+    {
+      type: 'essay',
+      question: 'Explique com suas palavras como uma rede neural aprende e processa informações:',
+      placeholder: 'Descreva o processo de aprendizado das redes neurais em pelo menos 3-4 linhas...'
+    },
+    {
+      type: 'multiple',
+      question: 'Qual é a função principal da camada de entrada em uma rede neural?',
+      options: [
+        'Processar e transformar os dados',
+        'Receber os dados iniciais do problema',
+        'Produzir o resultado final',
+        'Ajustar os pesos das conexões'
+      ],
+      correct: 1
+    },
+    {
+      type: 'multiple',
+      question: 'O que acontece durante a retropropagação?',
+      options: [
+        'Os dados fluem da entrada para a saída',
+        'A rede processa novos dados de entrada',
+        'Os pesos das conexões são ajustados para reduzir o erro',
+        'A rede produz o resultado final'
+      ],
+      correct: 2
+    },
+    {
+      type: 'multiple',
+      question: 'Quantas camadas possui uma rede neural básica?',
+      options: [
+        'Apenas uma camada',
+        'Sempre exatamente duas camadas',
+        'No mínimo três camadas (entrada, oculta, saída)',
+        'Sempre mais de cinco camadas'
+      ],
+      correct: 2
+    },
+    {
+      type: 'multiple',
+      question: 'Por que as redes neurais são inspiradas no cérebro humano?',
+      options: [
+        'Porque usam a mesma linguagem de programação',
+        'Porque processam informações através de neurônios conectados',
+        'Porque consomem a mesma quantidade de energia',
+        'Porque têm a mesma velocidade de processamento'
+      ],
+      correct: 1
+    }
+  ];
+
+  const handleMultipleChoice = (questionIndex, answerIndex) => {
+    setAnswers({...answers, [questionIndex]: answerIndex});
+  };
+
+  const handleNext = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      calculateScore();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
+  const calculateScore = () => {
+    let totalScore = 0;
+    
+    // Pontuação para perguntas de múltipla escolha (10 pontos cada)
+    questions.forEach((question, index) => {
+      if (question.type === 'multiple' && answers[index] === question.correct) {
+        totalScore += 10;
+      }
+    });
+
+    // Pontuação para pergunta discursiva (10 pontos se respondida)
+    if (essayAnswer.trim().length > 50) {
+      totalScore += 10;
+    }
+
+    setScore(totalScore);
+    setCompleted(true);
+    setShowResults(true);
+    saveProgress(totalScore);
+  };
+
+  const saveProgress = async (finalScore) => {
+    if (!user) return;
+
+    try {
+      await supabase
+        .from('progress')
+        .upsert({
+          user_id: user.id,
+          module_name: "Redes Neurais",
+          is_completed: true,
+          score: finalScore
+        });
+    } catch (error) {
+      console.error('Erro ao salvar progresso:', error);
+    }
+  };
+
+  const resetExercise = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setScore(0);
+    setCompleted(false);
+    setShowResults(false);
+    setEssayAnswer('');
+  };
+
+  if (showResults) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center">Exercício Concluído!</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <div className="text-4xl font-bold text-primary">{score}/50</div>
+          <p className="text-lg">
+            {score >= 40 ? 'Excelente trabalho!' : 
+             score >= 30 ? 'Bom desempenho!' : 
+             'Continue estudando para melhorar!'}
+          </p>
+          <Button onClick={resetExercise}>
+            Tentar Novamente
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentQ = questions[currentQuestion];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Exercício Interativo - Redes Neurais</CardTitle>
+        <CardDescription>
+          Pergunta {currentQuestion + 1} de {questions.length}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">{currentQ.question}</h3>
+          
+          {currentQ.type === 'essay' ? (
+            <div className="space-y-2">
+              <Textarea
+                value={essayAnswer}
+                onChange={(e) => setEssayAnswer(e.target.value)}
+                placeholder={currentQ.placeholder}
+                className="min-h-[120px]"
+              />
+              <p className="text-sm text-muted-foreground">
+                Mínimo de 50 caracteres para pontuação completa
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {currentQ.options.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id={`q${currentQuestion}_${index}`}
+                    name={`question_${currentQuestion}`}
+                    checked={answers[currentQuestion] === index}
+                    onChange={() => handleMultipleChoice(currentQuestion, index)}
+                    className="h-4 w-4"
+                  />
+                  <label
+                    htmlFor={`q${currentQuestion}_${index}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {option}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            disabled={currentQuestion === 0}
+          >
+            Anterior
+          </Button>
+          
+          <Button
+            onClick={handleNext}
+            disabled={
+              currentQ.type === 'essay' 
+                ? essayAnswer.trim().length < 10
+                : answers[currentQuestion] === undefined
+            }
+          >
+            {currentQuestion === questions.length - 1 ? 'Finalizar' : 'Próxima'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function RedesNeuraisContent() {
   return (
     <>
@@ -765,25 +989,31 @@ function RedesNeuraisContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Explique com suas palavras</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="h-5 w-5" />
+            Vídeo Explicativo
+          </CardTitle>
           <CardDescription>
-            Responda em 2-3 linhas: O que uma rede neural faz?
+            Assista ao vídeo sobre redes neurais
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground mb-4">
-              <strong>Exemplo de resposta:</strong>
-            </p>
-            <p className="text-sm">
-              "Uma rede neural pega informações de entrada, processa essas informações através 
-              de várias camadas de 'neurônios' artificiais que estão conectados entre si, e 
-              produz uma resposta ou previsão. É como se ela 'aprendesse' padrões nos dados 
-              para tomar decisões inteligentes."
-            </p>
+          <div className="aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/N4V8KEAOV-c"
+              title="Redes Neurais Explicado"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="rounded-lg"
+            ></iframe>
           </div>
         </CardContent>
       </Card>
+
+      <RedesNeuraisExercise />
     </>
   );
 }
