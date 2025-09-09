@@ -389,6 +389,217 @@ function FundamentosMLContent() {
   );
 }
 
+// Componente de exercício interativo para módulo 3
+function DataAlgorithmsExercise() {
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const { user } = useAuth();
+
+  const scenarios = [
+    {
+      id: 'data-quality',
+      text: 'Uma empresa de e-commerce quer prever quais produtos os clientes vão comprar. Eles têm dados históricos de compras, mas 30% dos registros estão com informações de preço faltando. Qual é o principal problema?',
+      options: [
+        { id: 'algoritmo', text: 'Falta de algoritmo adequado' },
+        { id: 'volume', text: 'Volume insuficiente de dados' },
+        { id: 'qualidade', text: 'Qualidade dos dados (completude)' }
+      ],
+      correct: 'qualidade',
+      explanation: 'A falta de informações de preço em 30% dos registros é um problema de completude dos dados, uma das características essenciais para dados de qualidade.'
+    },
+    {
+      id: 'data-preprocessing',
+      text: 'Um algoritmo de reconhecimento de imagens está tendo baixa precisão. As imagens de treinamento incluem fotos tiradas em diferentes condições de luz, algumas muito escuras e outras muito claras. O que deveria ser feito?',
+      options: [
+        { id: 'mais-dados', text: 'Coletar mais imagens' },
+        { id: 'normalizacao', text: 'Normalizar e preprocessar as imagens' },
+        { id: 'algoritmo-diferente', text: 'Usar um algoritmo diferente' }
+      ],
+      correct: 'normalizacao',
+      explanation: 'A normalização e preprocessamento das imagens garante consistência nos dados, padronizando condições de iluminação para melhor treinamento.'
+    },
+    {
+      id: 'bias-data',
+      text: 'Um sistema de IA para análise de currículos foi treinado com dados históricos de contratações de uma empresa. O sistema começou a favorecer candidatos homens. Qual é o problema?',
+      options: [
+        { id: 'algoritmo-ruim', text: 'Algoritmo inadequado' },
+        { id: 'dados-enviesados', text: 'Dados de treinamento enviesados' },
+        { id: 'poucos-dados', text: 'Volume insuficiente de dados' }
+      ],
+      correct: 'dados-enviesados',
+      explanation: 'Os dados históricos refletem vieses passados da empresa, demonstrando como dados enviesados podem perpetuar discriminações no sistema de IA.'
+    },
+    {
+      id: 'feature-engineering',
+      text: 'Para prever o preço de imóveis, quais características (features) seriam MAIS relevantes?',
+      options: [
+        { id: 'cor-casa', text: 'Cor da casa e nome do proprietário' },
+        { id: 'localizacao-tamanho', text: 'Localização, tamanho e número de quartos' },
+        { id: 'data-construcao', text: 'Apenas data de construção' }
+      ],
+      correct: 'localizacao-tamanho',
+      explanation: 'Localização, tamanho e número de quartos são características que realmente influenciam o preço, demonstrando a importância da seleção adequada de features.'
+    },
+    {
+      id: 'overfitting',
+      text: 'Um modelo de IA tem 99% de precisão nos dados de treinamento, mas apenas 60% em dados novos. O que está acontecendo?',
+      options: [
+        { id: 'underfitting', text: 'Underfitting - modelo muito simples' },
+        { id: 'overfitting', text: 'Overfitting - modelo decorou os dados' },
+        { id: 'dados-ruins', text: 'Dados de teste são de baixa qualidade' }
+      ],
+      correct: 'overfitting',
+      explanation: 'Alta precisão no treino mas baixa em dados novos indica overfitting - o modelo memorizou os dados de treino em vez de generalizar padrões.'
+    }
+  ];
+
+  const scenario = scenarios[currentQuestion];
+
+  const handleSubmit = async () => {
+    setShowResult(true);
+    
+    if (selectedAnswer === scenario.correct) {
+      const newScore = score + 10;
+      setScore(newScore);
+      
+      // Salvar progresso no banco de dados
+      if (user?.id) {
+        try {
+          const { error } = await supabase
+            .from('progress')
+            .upsert({
+              user_id: user.id,
+              module_name: 'dados-algoritmos',
+              completed: true,
+              score: newScore
+            }, {
+              onConflict: 'user_id,module_name'
+            });
+            
+          if (!error) {
+            toast.success('Resposta correta! +10 pontos');
+          }
+        } catch (error) {
+          console.error('Erro ao salvar progresso:', error);
+        }
+      }
+    } else {
+      toast.error('Resposta incorreta. Tente novamente!');
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < scenarios.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer('');
+      setShowResult(false);
+    }
+  };
+
+  const resetExercise = () => {
+    setCurrentQuestion(0);
+    setSelectedAnswer('');
+    setShowResult(false);
+    setScore(0);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Exercício Interativo</CardTitle>
+        <CardDescription>
+          Pergunta {currentQuestion + 1} de {scenarios.length} - Teste seus conhecimentos sobre dados e algoritmos
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="p-4 bg-muted rounded-lg">
+          <p className="font-medium mb-2">Cenário:</p>
+          <p className="text-sm">{scenario.text}</p>
+        </div>
+
+        <div className="space-y-3">
+          <p className="font-medium">Qual é a melhor resposta?</p>
+          {scenario.options.map((option) => (
+            <div
+              key={option.id}
+              className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                selectedAnswer === option.id
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-primary/50'
+              } ${showResult ? 'cursor-not-allowed' : ''}`}
+              onClick={() => !showResult && setSelectedAnswer(option.id)}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm">{option.text}</span>
+                {showResult && option.id === scenario.correct && (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                )}
+                {showResult && selectedAnswer === option.id && option.id !== scenario.correct && (
+                  <span className="text-red-500">✗</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {showResult && (
+          <div className={`p-4 border rounded-lg ${
+            selectedAnswer === scenario.correct 
+              ? 'bg-green-50 dark:bg-green-950 border-green-200' 
+              : 'bg-red-50 dark:bg-red-950 border-red-200'
+          }`}>
+            <p className={`font-medium mb-2 ${
+              selectedAnswer === scenario.correct 
+                ? 'text-green-800 dark:text-green-200' 
+                : 'text-red-800 dark:text-red-200'
+            }`}>
+              {selectedAnswer === scenario.correct ? '✅ Correto! +10 pontos' : '❌ Incorreto'}
+            </p>
+            <p className={`text-sm ${
+              selectedAnswer === scenario.correct 
+                ? 'text-green-700 dark:text-green-300' 
+                : 'text-red-700 dark:text-red-300'
+            }`}>
+              <strong>Explicação:</strong> {scenario.explanation}
+            </p>
+            {score > 0 && (
+              <p className="text-sm font-semibold mt-2">
+                Pontuação Total: {score} pontos
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          {!showResult ? (
+            <Button 
+              onClick={handleSubmit} 
+              disabled={!selectedAnswer}
+              className="flex-1"
+            >
+              Verificar Resposta
+            </Button>
+          ) : (
+            <div className="flex gap-2 w-full">
+              {currentQuestion < scenarios.length - 1 ? (
+                <Button onClick={nextQuestion} className="flex-1">
+                  Próxima Pergunta
+                </Button>
+              ) : (
+                <Button onClick={resetExercise} variant="outline" className="flex-1">
+                  Reiniciar Exercício
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function DadosAlgoritmosContent() {
   return (
     <>
@@ -456,34 +667,31 @@ function DadosAlgoritmosContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Exercício: Organize a Sequência</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="h-5 w-5" />
+            Vídeo Explicativo
+          </CardTitle>
           <CardDescription>
-            Como um algoritmo usa dados para tomar decisões?
+            Assista ao vídeo sobre dados e algoritmos de IA
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <p className="font-medium">Ordene os passos corretos:</p>
-            <div className="space-y-2">
-              <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 rounded-lg">
-                <span className="font-bold text-blue-700 dark:text-blue-300">1.</span> Coleta de Dados
-              </div>
-              <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 rounded-lg">
-                <span className="font-bold text-green-700 dark:text-green-300">2.</span> Pré-processamento e Limpeza
-              </div>
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 rounded-lg">
-                <span className="font-bold text-yellow-700 dark:text-yellow-300">3.</span> Treinamento do Algoritmo
-              </div>
-              <div className="p-3 bg-purple-50 dark:bg-purple-950 border border-purple-200 rounded-lg">
-                <span className="font-bold text-purple-700 dark:text-purple-300">4.</span> Validação e Teste
-              </div>
-              <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 rounded-lg">
-                <span className="font-bold text-red-700 dark:text-red-300">5.</span> Implementação e Decisão
-              </div>
-            </div>
+          <div className="aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/jp36b6J8Yd4"
+              title="Dados e Algoritmos de IA"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="rounded-lg"
+            ></iframe>
           </div>
         </CardContent>
       </Card>
+
+      <DataAlgorithmsExercise />
     </>
   );
 }
@@ -709,7 +917,7 @@ export default function Module() {
         return {
           title: 'Módulo 3: Representação de Dados e Algoritmos',
           content: <DadosAlgoritmosContent />,
-          hasQuiz: true
+          hasQuiz: false
         };
       case 'redes-neurais':
         return {
