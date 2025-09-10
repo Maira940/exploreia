@@ -1018,6 +1018,226 @@ function RedesNeuraisContent() {
   );
 }
 
+// Componente de exercício para módulo 5
+function EthicsExercise() {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [currentStep, setCurrentStep] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const { user } = useAuth();
+
+  const questions = [
+    {
+      id: 'essay',
+      type: 'essay',
+      question: 'Descreva um exemplo prático de como o viés algorítmico pode afetar decisões importantes na sociedade (como contratações, empréstimos ou justiça criminal).',
+      placeholder: 'Digite sua resposta aqui...'
+    },
+    {
+      id: 'q1',
+      type: 'multiple',
+      question: 'Qual é o principal objetivo da transparência em sistemas de IA?',
+      options: [
+        { id: 'a', text: 'Tornar os algoritmos mais rápidos' },
+        { id: 'b', text: 'Permitir que usuários entendam como decisões são tomadas' },
+        { id: 'c', text: 'Reduzir o custo de implementação' }
+      ],
+      correct: 'b'
+    },
+    {
+      id: 'q2',
+      type: 'multiple',
+      question: 'O que significa "explicabilidade" em IA?',
+      options: [
+        { id: 'a', text: 'A capacidade de explicar resultados de forma compreensível' },
+        { id: 'b', text: 'A velocidade de processamento do algoritmo' },
+        { id: 'c', text: 'O número de dados que o sistema pode processar' }
+      ],
+      correct: 'a'
+    },
+    {
+      id: 'q3',
+      type: 'multiple',
+      question: 'Qual dessas práticas ajuda a reduzir viés em sistemas de IA?',
+      options: [
+        { id: 'a', text: 'Usar apenas dados de uma fonte' },
+        { id: 'b', text: 'Diversificar os dados de treinamento' },
+        { id: 'c', text: 'Ignorar características demográficas' }
+      ],
+      correct: 'b'
+    },
+    {
+      id: 'q4',
+      type: 'multiple',
+      question: 'Por que a privacidade é importante em sistemas de IA?',
+      options: [
+        { id: 'a', text: 'Para proteger dados pessoais e evitar uso indevido' },
+        { id: 'b', text: 'Para acelerar o treinamento de modelos' },
+        { id: 'c', text: 'Para reduzir custos de armazenamento' }
+      ],
+      correct: 'a'
+    }
+  ];
+
+  const currentQuestion = questions[currentStep];
+
+  const handleAnswerChange = (questionId: string, answer: string) => {
+    setAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  const calculateScore = () => {
+    let totalScore = 0;
+    questions.forEach(q => {
+      if (q.type === 'multiple' && answers[q.id] === q.correct) {
+        totalScore += 10;
+      } else if (q.type === 'essay' && answers[q.id] && answers[q.id].length > 50) {
+        totalScore += 10; // Pontos por resposta discursiva completa
+      }
+    });
+    return totalScore;
+  };
+
+  const handleSubmit = async () => {
+    const finalScore = calculateScore();
+    setScore(finalScore);
+    setShowResults(true);
+
+    // Salvar progresso no banco de dados
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from('progress')
+          .upsert({
+            user_id: user.id,
+            module_name: 'ia-etica',
+            is_completed: true,
+            score: finalScore
+          }, {
+            onConflict: 'user_id,module_name'
+          });
+          
+        if (!error) {
+          toast.success(`Exercício concluído! Pontuação: ${finalScore} pontos`);
+        }
+      } catch (error) {
+        console.error('Erro ao salvar progresso:', error);
+      }
+    }
+  };
+
+  const nextStep = () => {
+    if (currentStep < questions.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const previousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  if (showResults) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Resultados do Exercício</CardTitle>
+          <CardDescription>
+            Sua pontuação final: {score} de {questions.length * 10} pontos
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-muted rounded-lg">
+            <h4 className="font-semibold mb-2">Resumo das respostas:</h4>
+            {questions.map((q, index) => (
+              <div key={q.id} className="mb-3">
+                <p className="font-medium text-sm">Pergunta {index + 1}: {q.question}</p>
+                {q.type === 'essay' ? (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Resposta discursiva: {answers[q.id] ? `${answers[q.id].length} caracteres` : 'Não respondida'}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Sua resposta: {q.options?.find(opt => opt.id === answers[q.id])?.text || 'Não respondida'}
+                    {answers[q.id] === q.correct ? ' ✅' : ' ❌'}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+          <Button onClick={() => {
+            setShowResults(false);
+            setCurrentStep(0);
+            setAnswers({});
+            setScore(0);
+          }}>
+            Refazer Exercício
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Exercício sobre Ética em IA</CardTitle>
+        <CardDescription>
+          Pergunta {currentStep + 1} de {questions.length}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <h4 className="font-medium">{currentQuestion.question}</h4>
+          
+          {currentQuestion.type === 'essay' ? (
+            <Textarea
+              placeholder={currentQuestion.placeholder}
+              value={answers[currentQuestion.id] || ''}
+              onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+              rows={6}
+              className="w-full"
+            />
+          ) : (
+            <div className="space-y-2">
+              {currentQuestion.options?.map((option) => (
+                <div
+                  key={option.id}
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    answers[currentQuestion.id] === option.id
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => handleAnswerChange(currentQuestion.id, option.id)}
+                >
+                  <span className="text-sm">{option.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          {currentStep > 0 && (
+            <Button variant="outline" onClick={previousStep}>
+              Anterior
+            </Button>
+          )}
+          <Button 
+            onClick={nextStep}
+            disabled={!answers[currentQuestion.id]}
+            className="flex-1"
+          >
+            {currentStep === questions.length - 1 ? 'Finalizar' : 'Próxima'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function IAEticaContent() {
   return (
     <>
@@ -1097,31 +1317,31 @@ function IAEticaContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Formulário Opinativo</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="h-5 w-5" />
+            Vídeo Explicativo
+          </CardTitle>
           <CardDescription>
-            Reflita sobre o uso da IA na educação
+            Assista ao vídeo para aprofundar seus conhecimentos sobre ética em IA
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <h4 className="font-semibold">
-              Você usaria IA para corrigir provas? Por quê?
-            </h4>
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">
-                <strong>Pontos para reflexão:</strong>
-              </p>
-              <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
-                <li>Eficiência vs. Personalização</li>
-                <li>Feedback mais rápido para estudantes</li>
-                <li>Possibilidade de viés na correção</li>
-                <li>Perda do toque humano na avaliação</li>
-                <li>Capacidade de avaliar criatividade e pensamento crítico</li>
-              </ul>
-            </div>
+          <div className="aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/y-HPMZ8h_Iw"
+              title="IA e Questões Éticas"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="rounded-lg"
+            ></iframe>
           </div>
         </CardContent>
       </Card>
+
+      <EthicsExercise />
     </>
   );
 }
@@ -1159,7 +1379,7 @@ export default function Module() {
         return {
           title: 'Módulo 5: IA e Ética',
           content: <IAEticaContent />,
-          hasQuiz: true
+          hasQuiz: false
         };
       default:
         return null;
