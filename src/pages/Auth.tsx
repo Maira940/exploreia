@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import exploreIALogo from '/lovable-uploads/f9c9062a-04be-46fc-9868-7031f233b593.png';
 
 export default function Auth() {
   const [loginEmail, setLoginEmail] = useState('');
@@ -66,6 +67,9 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <img src={exploreIALogo} alt="Explore IA Logo" className="h-16 w-16" />
+          </div>
           <CardTitle className="text-2xl font-bold">Explore IA</CardTitle>
           <CardDescription>
             Plataforma de ensino sobre Inteligência Artificial
