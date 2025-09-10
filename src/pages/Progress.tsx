@@ -43,14 +43,18 @@ export default function ProgressPage() {
     }
   };
 
-  const totalModules = 1; // Por enquanto só temos o módulo introdutório
+  const totalModules = 5; // Temos 5 módulos no curso
   const completedModules = progress.filter(p => p.is_completed).length;
   const totalScore = progress.reduce((sum, p) => sum + p.score, 0);
   const completionPercentage = (completedModules / totalModules) * 100;
 
   const getModuleDisplayName = (moduleName: string) => {
     const names: { [key: string]: string } = {
-      'introducao': 'Módulo Introdutório'
+      'introducao': 'Módulo 1: Introdução à IA',
+      'fundamentos': 'Módulo 2: Fundamentos do ML',
+      'deep-learning': 'Módulo 3: Deep Learning',
+      'aplicacoes': 'Módulo 4: Aplicações Práticas',
+      'etica': 'Módulo 5: Ética e Futuro da IA'
     };
     return names[moduleName] || moduleName;
   };

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { LogOut, User, BarChart3 } from 'lucide-react';
+import exploreIALogo from '/lovable-uploads/f9c9062a-04be-46fc-9868-7031f233b593.png';
 
 export default function Home() {
   const { profile, signOut } = useAuth();
@@ -11,7 +12,10 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Explore IA</h1>
+          <div className="flex items-center gap-3">
+            <img src={exploreIALogo} alt="Explore IA Logo" className="h-8 w-8" />
+            <h1 className="text-2xl font-bold">Explore IA</h1>
+          </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
