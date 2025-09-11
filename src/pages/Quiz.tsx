@@ -27,6 +27,11 @@ interface Quiz {
   points: number;
 }
 
+interface ShuffledOption {
+  value: string;
+  text: string;
+}
+
 export default function Quiz() {
   const { moduleId } = useParams();
   const { user } = useAuth();
@@ -40,6 +45,25 @@ export default function Quiz() {
   const [totalScore, setTotalScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showRules, setShowRules] = useState(true);
+  const [shuffledOptions, setShuffledOptions] = useState<ShuffledOption[]>([]);
+
+  // Função para embaralhar as opções
+  const shuffleOptions = (quiz: Quiz) => {
+    const options = [
+      { value: 'a', text: quiz.option_a },
+      { value: 'b', text: quiz.option_b },
+      { value: 'c', text: quiz.option_c },
+      { value: 'd', text: quiz.option_d }
+    ];
+    
+    // Algoritmo Fisher-Yates para embaralhar
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    
+    return options;
+  };
 
   // Regras do quiz baseadas no módulo
   const getQuizRules = () => {
@@ -59,6 +83,13 @@ export default function Quiz() {
   useEffect(() => {
     fetchQuizzes();
   }, [moduleId]);
+
+  useEffect(() => {
+    if (quizzes.length > 0 && !showRules) {
+      const currentQuiz = quizzes[currentQuizIndex];
+      setShuffledOptions(shuffleOptions(currentQuiz));
+    }
+  }, [currentQuizIndex, quizzes, showRules]);
 
   const fetchQuizzes = async () => {
     try {
@@ -271,54 +302,20 @@ export default function Quiz() {
                 onValueChange={setSelectedAnswer}
                 disabled={showResult}
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="a" id="a" />
-                  <Label htmlFor="a" className="flex-1 cursor-pointer">
-                    a) {currentQuiz.option_a}
-                  </Label>
-                  {showResult && currentQuiz.correct_answer === 'a' && (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  )}
-                  {showResult && selectedAnswer === 'a' && currentQuiz.correct_answer !== 'a' && (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="b" id="b" />
-                  <Label htmlFor="b" className="flex-1 cursor-pointer">
-                    b) {currentQuiz.option_b}
-                  </Label>
-                  {showResult && currentQuiz.correct_answer === 'b' && (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  )}
-                  {showResult && selectedAnswer === 'b' && currentQuiz.correct_answer !== 'b' && (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="c" id="c" />
-                  <Label htmlFor="c" className="flex-1 cursor-pointer">
-                    c) {currentQuiz.option_c}
-                  </Label>
-                  {showResult && currentQuiz.correct_answer === 'c' && (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  )}
-                  {showResult && selectedAnswer === 'c' && currentQuiz.correct_answer !== 'c' && (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="d" id="d" />
-                  <Label htmlFor="d" className="flex-1 cursor-pointer">
-                    d) {currentQuiz.option_d}
-                  </Label>
-                  {showResult && currentQuiz.correct_answer === 'd' && (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  )}
-                  {showResult && selectedAnswer === 'd' && currentQuiz.correct_answer !== 'd' && (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
+                {shuffledOptions.map((option, index) => (
+                  <div key={`${option.value}-${index}`} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.value} id={option.value} />
+                    <Label htmlFor={option.value} className="flex-1 cursor-pointer">
+                      {String.fromCharCode(97 + index)}) {option.text}
+                    </Label>
+                    {showResult && currentQuiz.correct_answer === option.value && (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    )}
+                    {showResult && selectedAnswer === option.value && currentQuiz.correct_answer !== option.value && (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                ))}
               </RadioGroup>
 
               <div className="flex gap-4">

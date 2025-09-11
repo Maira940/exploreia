@@ -577,7 +577,6 @@ function FundamentosMLContent() {
         </CardContent>
       </Card>
 
-      <InteractiveExercise />
     </>
   );
 }
@@ -884,7 +883,6 @@ function DadosAlgoritmosContent() {
         </CardContent>
       </Card>
 
-      <DataAlgorithmsExercise />
     </>
   );
 }
@@ -1205,7 +1203,6 @@ function RedesNeuraisContent() {
         </CardContent>
       </Card>
 
-      <RedesNeuraisExercise />
     </>
   );
 }
@@ -1533,7 +1530,6 @@ function IAEticaContent() {
         </CardContent>
       </Card>
 
-      <EthicsExercise />
     </>
   );
 }
@@ -1547,7 +1543,7 @@ export default function Module() {
         return {
           title: 'Módulo 1: Introdução à IA',
           content: <IntroducaoContent />,
-          hasQuiz: true
+          hasQuiz: false
         };
       case 'fundamentos-ml':
         return {
