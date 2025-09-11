@@ -9,6 +9,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
+// Função para obter o próximo módulo
+const getNextModuleId = (currentModuleId: string | undefined): string => {
+  const modules = ['introducao', 'fundamentos-ml', 'dados-algoritmos', 'redes-neurais', 'ia-etica'];
+  const currentIndex = modules.findIndex(module => module === currentModuleId);
+  return currentIndex < modules.length - 1 ? modules[currentIndex + 1] : 'introducao';
+};
+
 interface Quiz {
   id: string;
   question: string;
@@ -32,6 +39,22 @@ export default function Quiz() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showRules, setShowRules] = useState(true);
+
+  // Regras do quiz baseadas no módulo
+  const getQuizRules = () => {
+    const totalQuestions = quizzes.length;
+    const passingGrade = Math.ceil(totalQuestions * 0.6); // 60% de acerto
+    const pointsPerQuestion = quizzes[0]?.points || 10;
+    
+    return {
+      totalQuestions,
+      passingGrade,
+      pointsPerQuestion,
+      totalPoints: totalQuestions * pointsPerQuestion,
+      passingPoints: passingGrade * pointsPerQuestion
+    };
+  };
 
   useEffect(() => {
     fetchQuizzes();
@@ -133,6 +156,83 @@ export default function Quiz() {
 
   const currentQuiz = quizzes[currentQuizIndex];
   const isLastQuestion = currentQuizIndex === quizzes.length - 1;
+  const rules = getQuizRules();
+
+  // Tela de regras antes do quiz
+  if (showRules) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={`/modulo/${moduleId}`}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar
+                </Link>
+              </Button>
+              <h1 className="text-2xl font-bold">Quiz - {moduleId}</h1>
+            </div>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">📋 Regras do Quiz</CardTitle>
+                <CardDescription className="text-center">
+                  Leia atentamente antes de começar
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="p-4 bg-primary/10 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-2">📊 Pontuação</h3>
+                    <ul className="space-y-1 text-sm">
+                      <li>• Cada questão vale <strong>{rules.pointsPerQuestion} pontos</strong></li>
+                      <li>• Total de pontos: <strong>{rules.totalPoints} pontos</strong></li>
+                      <li>• Apenas respostas corretas pontuam</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="p-4 bg-secondary/10 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-2">✅ Aprovação</h3>
+                    <ul className="space-y-1 text-sm">
+                      <li>• Total de questões: <strong>{rules.totalQuestions}</strong></li>
+                      <li>• Mínimo para aprovação: <strong>{rules.passingGrade} questões</strong></li>
+                      <li>• Pontos mínimos: <strong>{rules.passingPoints} pontos</strong></li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="font-semibold text-lg mb-2">📝 Instruções</h3>
+                  <ul className="space-y-1 text-sm">
+                    <li>• Leia cada questão com atenção</li>
+                    <li>• Escolha apenas uma alternativa por questão</li>
+                    <li>• Você receberá feedback imediato após cada resposta</li>
+                    <li>• Não é possível voltar para questões anteriores</li>
+                    <li>• Seu progresso será salvo automaticamente</li>
+                  </ul>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button 
+                    onClick={() => setShowRules(false)}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    🚀 Começar Quiz
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -237,11 +337,20 @@ export default function Quiz() {
                         Próxima Questão
                       </Button>
                     ) : (
-                      <Button asChild className="flex-1">
-                        <Link to="/progresso">
-                          Ver Progresso
-                        </Link>
-                      </Button>
+                      <div className="flex gap-2 w-full">
+                        <Button asChild className="flex-1">
+                          <Link to="/progresso">
+                            Ver Progresso
+                          </Link>
+                        </Button>
+                        {totalScore >= rules.passingPoints && (
+                          <Button asChild variant="outline" className="flex-1">
+                            <Link to={`/modulo/${getNextModuleId(moduleId)}`}>
+                              Próximo Módulo
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </>
                 )}

@@ -6,7 +6,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Play, Brain, Database, Network, Scale, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Play, Brain, Database, Network, Scale, CheckCircle, ArrowRight } from 'lucide-react';
+
+// Função para obter o próximo módulo
+const getNextModuleId = (currentModuleId: string | undefined): string => {
+  const modules = ['introducao', 'fundamentos-ml', 'dados-algoritmos', 'redes-neurais', 'ia-etica'];
+  const currentIndex = modules.findIndex(module => module === currentModuleId);
+  return currentIndex < modules.length - 1 ? modules[currentIndex + 1] : '';
+};
+
+const getNextModuleName = (currentModuleId: string | undefined): string => {
+  const moduleNames: { [key: string]: string } = {
+    'introducao': 'Fundamentos de ML',
+    'fundamentos-ml': 'Dados e Algoritmos', 
+    'dados-algoritmos': 'Redes Neurais',
+    'redes-neurais': 'IA e Ética',
+    'ia-etica': ''
+  };
+  return moduleNames[currentModuleId || ''] || '';
+};
 
 // Componente de exercício interativo
 function InteractiveExercise() {
@@ -219,6 +237,178 @@ function InteractiveExercise() {
   );
 }
 
+// Exercício para Introdução à IA
+function IntroducaoExercise() {
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const { user } = useAuth();
+
+  const scenarios = [
+    {
+      id: 'definicao-ia',
+      text: 'Qual é a definição mais precisa de Inteligência Artificial?',
+      options: [
+        { id: 'a', text: 'Robôs que se parecem com humanos' },
+        { id: 'b', text: 'Capacidade de máquinas realizarem tarefas que requerem inteligência humana' },
+        { id: 'c', text: 'Apenas programas de computador muito avançados' }
+      ],
+      correct: 'b',
+      explanation: 'IA é definida como a capacidade de máquinas realizarem tarefas que normalmente requerem inteligência humana.'
+    },
+    {
+      id: 'aplicacao-ia',
+      text: 'Qual destes NÃO é um exemplo de aplicação de IA no dia a dia?',
+      options: [
+        { id: 'a', text: 'Assistentes virtuais como Siri e Alexa' },
+        { id: 'b', text: 'Calculadora básica' },
+        { id: 'c', text: 'Recomendações do Netflix' }
+      ],
+      correct: 'b',
+      explanation: 'Uma calculadora básica segue instruções programadas simples, não usando técnicas de IA.'
+    }
+  ];
+
+  const scenario = scenarios[currentQuestion];
+
+  const handleSubmit = async () => {
+    setShowResult(true);
+    
+    if (selectedAnswer === scenario.correct) {
+      const newScore = score + 10;
+      setScore(newScore);
+      
+      if (user?.id) {
+        try {
+          await supabase
+            .from('progress')
+            .upsert({
+              user_id: user.id,
+              module_name: 'introducao',
+              is_completed: currentQuestion === scenarios.length - 1,
+              score: newScore
+            }, { onConflict: 'user_id,module_name' });
+            
+          toast.success('Resposta correta! +10 pontos');
+        } catch (error) {
+          console.error('Erro ao salvar progresso:', error);
+        }
+      }
+    } else {
+      toast.error('Resposta incorreta. Tente novamente!');
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < scenarios.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer('');
+      setShowResult(false);
+    }
+  };
+
+  const resetExercise = () => {
+    setCurrentQuestion(0);
+    setSelectedAnswer('');
+    setShowResult(false);
+    setScore(0);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Exercício Interativo</CardTitle>
+        <CardDescription>
+          Pergunta {currentQuestion + 1} de {scenarios.length} - Teste seus conhecimentos sobre IA
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="p-4 bg-muted rounded-lg">
+          <p className="font-medium mb-2">Questão:</p>
+          <p className="text-sm">{scenario.text}</p>
+        </div>
+
+        <div className="space-y-3">
+          {scenario.options.map((option) => (
+            <div
+              key={option.id}
+              className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                selectedAnswer === option.id
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-primary/50'
+              } ${showResult ? 'cursor-not-allowed' : ''}`}
+              onClick={() => !showResult && setSelectedAnswer(option.id)}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm">{option.text}</span>
+                {showResult && option.id === scenario.correct && (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                )}
+                {showResult && selectedAnswer === option.id && option.id !== scenario.correct && (
+                  <span className="text-red-500">✗</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {showResult && (
+          <div className={`p-4 border rounded-lg ${
+            selectedAnswer === scenario.correct 
+              ? 'bg-green-50 dark:bg-green-950 border-green-200' 
+              : 'bg-red-50 dark:bg-red-950 border-red-200'
+          }`}>
+            <p className={`font-medium mb-2 ${
+              selectedAnswer === scenario.correct 
+                ? 'text-green-800 dark:text-green-200' 
+                : 'text-red-800 dark:text-red-200'
+            }`}>
+              {selectedAnswer === scenario.correct ? '✅ Correto! +10 pontos' : '❌ Incorreto'}
+            </p>
+            <p className={`text-sm ${
+              selectedAnswer === scenario.correct 
+                ? 'text-green-700 dark:text-green-300' 
+                : 'text-red-700 dark:text-red-300'
+            }`}>
+              <strong>Explicação:</strong> {scenario.explanation}
+            </p>
+            {score > 0 && (
+              <p className="text-sm font-semibold mt-2">
+                Pontuação Total: {score} pontos
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          {!showResult ? (
+            <Button 
+              onClick={handleSubmit} 
+              disabled={!selectedAnswer}
+              className="flex-1"
+            >
+              Verificar Resposta
+            </Button>
+          ) : (
+            <div className="flex gap-2 w-full">
+              {currentQuestion < scenarios.length - 1 ? (
+                <Button onClick={nextQuestion} className="flex-1">
+                  Próxima Pergunta
+                </Button>
+              ) : (
+                <Button onClick={resetExercise} variant="outline" className="flex-1">
+                  Reiniciar Exercício
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Componentes de conteúdo para cada módulo
 function IntroducaoContent() {
   return (
@@ -302,6 +492,8 @@ function IntroducaoContent() {
           </div>
         </CardContent>
       </Card>
+
+      <IntroducaoExercise />
     </>
   );
 }
@@ -1416,15 +1608,28 @@ export default function Module() {
         <div className="max-w-4xl mx-auto space-y-8">
           {moduleContent.content}
           
-          {moduleContent.hasQuiz && (
-            <div className="text-center pt-8 border-t">
-              <Button asChild size="lg">
-                <Link to={`/quiz/${moduleId}`}>
-                  Fazer Quiz do Módulo
-                </Link>
-              </Button>
-            </div>
-          )}
+          <div className="pt-8 border-t space-y-4">
+            {moduleContent.hasQuiz && (
+              <div className="text-center">
+                <Button asChild size="lg">
+                  <Link to={`/quiz/${moduleId}`}>
+                    Fazer Quiz do Módulo
+                  </Link>
+                </Button>
+              </div>
+            )}
+            
+            {getNextModuleId(moduleId) && (
+              <div className="text-center">
+                <Button asChild variant="outline" size="lg">
+                  <Link to={`/modulo/${getNextModuleId(moduleId)}`}>
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Próximo Módulo: {getNextModuleName(moduleId)}
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
