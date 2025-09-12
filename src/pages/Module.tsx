@@ -1543,19 +1543,19 @@ export default function Module() {
         return {
           title: 'Módulo 1: Introdução à IA',
           content: <IntroducaoContent />,
-          hasQuiz: false
+          hasQuiz: true
         };
       case 'fundamentos-ml':
         return {
           title: 'Módulo 2: Fundamentos do Aprendizado de Máquina',
           content: <FundamentosMLContent />,
-          hasQuiz: false
+          hasQuiz: true
         };
       case 'dados-algoritmos':
         return {
           title: 'Módulo 3: Representação de Dados e Algoritmos',
           content: <DadosAlgoritmosContent />,
-          hasQuiz: false
+          hasQuiz: true
         };
       case 'redes-neurais':
         return {
@@ -1567,7 +1567,7 @@ export default function Module() {
         return {
           title: 'Módulo 5: IA e Ética',
           content: <IAEticaContent />,
-          hasQuiz: false
+          hasQuiz: true
         };
       default:
         return null;
