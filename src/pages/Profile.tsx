@@ -113,32 +113,100 @@ export default function Profile() {
   const downloadCertificate = () => {
     if (!certificate) return;
 
-    const content = `
-      CERTIFICADO DE CONCLUSÃO
-      
-      Certificamos que ${certificate.certificate_data.studentName}
-      concluiu com êxito o curso "Explore IA - Introdução à Inteligência Artificial"
-      
-      Módulos concluídos:
-      • Módulo 1: Introdução à IA
-      • Módulo 2: Fundamentos do Aprendizado de Máquina
-      • Módulo 3: Representação de Dados e Algoritmos
-      • Módulo 4: Redes Neurais Artificiais
-      • Módulo 5: IA e Ética
-      
-      Data de conclusão: ${certificate.certificate_data.completionDate}
-      ID do certificado: ${certificate.certificate_data.id}
-      
-      Explore IA Platform
-    `;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const element = document.createElement('a');
-    const file = new Blob([content], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `certificado-explore-ia-${user?.id}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    // Set canvas size (A4 landscape proportions)
+    canvas.width = 1200;
+    canvas.height = 800;
+
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#f8fafc');
+    gradient.addColorStop(1, '#e2e8f0');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Border
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+    // Inner border
+    ctx.strokeStyle = '#1e40af';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+
+    // Title
+    ctx.fillStyle = '#1e40af';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('CERTIFICADO DE CONCLUSÃO', canvas.width / 2, 140);
+
+    // Subtitle
+    ctx.fillStyle = '#475569';
+    ctx.font = '24px Arial';
+    ctx.fillText('Explore IA - Introdução à Inteligência Artificial', canvas.width / 2, 180);
+
+    // Main text
+    ctx.fillStyle = '#1e293b';
+    ctx.font = '28px Arial';
+    ctx.fillText('Certificamos que', canvas.width / 2, 250);
+
+    // Student name
+    ctx.fillStyle = '#1e40af';
+    ctx.font = 'bold 36px Arial';
+    ctx.fillText(certificate.certificate_data.studentName || 'Estudante', canvas.width / 2, 300);
+
+    // Description
+    ctx.fillStyle = '#1e293b';
+    ctx.font = '24px Arial';
+    ctx.fillText('concluiu com êxito o curso completo incluindo todos os módulos:', canvas.width / 2, 350);
+
+    // Modules list
+    const modules = [
+      '• Módulo 1: Introdução à IA',
+      '• Módulo 2: Fundamentos do Aprendizado de Máquina',
+      '• Módulo 3: Representação de Dados e Algoritmos',
+      '• Módulo 4: Redes Neurais Artificiais',
+      '• Módulo 5: IA e Ética'
+    ];
+
+    ctx.font = '18px Arial';
+    ctx.textAlign = 'left';
+    const startY = 390;
+    modules.forEach((module, index) => {
+      ctx.fillText(module, 200, startY + (index * 25));
+    });
+
+    // Date and ID
+    ctx.textAlign = 'center';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Data de conclusão: ${certificate.certificate_data.completionDate}`, canvas.width / 2, 600);
+    
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`ID do certificado: ${certificate.certificate_data.id}`, canvas.width / 2, 630);
+
+    // Platform name
+    ctx.fillStyle = '#1e40af';
+    ctx.font = 'bold 24px Arial';
+    ctx.fillText('Explore IA Platform', canvas.width / 2, 720);
+
+    // Download the image
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const element = document.createElement('a');
+        element.href = url;
+        element.download = `certificado-explore-ia-${user?.id}.png`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        URL.revokeObjectURL(url);
+      }
+    }, 'image/png');
   };
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
