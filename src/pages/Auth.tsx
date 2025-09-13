@@ -41,23 +41,31 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/`,
-    });
-    
-    if (error) {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email enviado",
+          description: "Verifique seu email para redefinir a senha.",
+        });
+        setShowReset(false);
+        setResetEmail('');
+      }
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.message,
+        description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Email enviado",
-        description: "Verifique seu email para redefinir a senha.",
-      });
-      setShowReset(false);
-      setResetEmail('');
     }
     
     setLoading(false);
