@@ -420,7 +420,7 @@ function IntroducaoContent() {
             Compreenda os fundamentos da IA e sua importância no mundo moderno
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 text-justify">
           <div className="prose max-w-none">
             <p className="text-lg leading-relaxed">
               A <strong>Inteligência Artificial (IA)</strong> é a capacidade de máquinas e sistemas 
@@ -511,7 +511,7 @@ function FundamentosMLContent() {
             Entenda as distinções fundamentais entre esses conceitos
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 text-justify">
           <div className="grid gap-6 md:grid-cols-3">
             <div className="p-4 border rounded-lg">
               <h4 className="font-semibold text-lg mb-2">Inteligência Artificial</h4>
@@ -805,7 +805,7 @@ function DadosAlgoritmosContent() {
             Entenda por que os dados são o combustível da IA
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 text-justify">
           <p className="text-lg leading-relaxed">
             Os dados são o <strong>combustível da IA</strong>. Sem dados de qualidade, 
             mesmo os algoritmos mais sofisticados não conseguem produzir resultados úteis.
@@ -1123,7 +1123,7 @@ function RedesNeuraisContent() {
             Entenda como funcionam as redes neurais artificiais
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 text-justify">
           <p className="text-lg leading-relaxed">
             As <strong>Redes Neurais Artificiais</strong> são sistemas computacionais inspirados 
             no funcionamento do cérebro humano, compostos por neurônios artificiais conectados 
@@ -1440,7 +1440,7 @@ function IAEticaContent() {
             Compreenda os desafios éticos do uso da IA
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 text-justify">
           <p className="text-lg leading-relaxed">
             Com o avanço da IA, surgem questões éticas importantes sobre como essas 
             tecnologias devem ser desenvolvidas e utilizadas de forma responsável.
