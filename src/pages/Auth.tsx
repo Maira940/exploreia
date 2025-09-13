@@ -43,7 +43,7 @@ export default function Auth() {
     
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+        redirectTo: `https://d8052e83-4185-49d1-ad4e-c8759282f0ed.sandbox.lovable.dev/auth`,
       });
       
       if (error) {
